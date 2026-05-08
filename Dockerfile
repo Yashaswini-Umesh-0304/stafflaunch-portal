@@ -8,6 +8,7 @@ RUN mvn clean package -DskipTests
 # Stage 2: Run the application
 FROM openjdk:17-jdk-slim
 WORKDIR /app
-COPY --from=build /app/target/springboot-thymeleaf-crud-tutorial-0.0.1-SNAPSHOT.jar app.jar
+# UPDATED: Uses a wildcard to find the generated JAR regardless of the artifactId name
+COPY --from=build /app/target/*-SNAPSHOT.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
