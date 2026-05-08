@@ -6,9 +6,9 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Run the application
-FROM openjdk:17-jdk-slim
+# FIX: Using the modern, officially supported Eclipse Temurin Java 17 image
+FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
-# UPDATED: Uses a wildcard to find the generated JAR regardless of the artifactId name
 COPY --from=build /app/target/*-SNAPSHOT.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
