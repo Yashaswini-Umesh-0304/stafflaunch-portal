@@ -9,9 +9,9 @@
         <relativePath/> 
     </parent>
     <groupId>net.javaguides.springboot</groupId>
-    <artifactId>springboot-thymeleaf-crud-tutorial</artifactId>
+    <artifactId>StaffLaunch-Portal</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>springboot-thymeleaf-crud-tutorial</name>
+    <name>StaffLaunch-Portal</name>
     <description>Java Full Stack Project - Enterprise Portal</description>
 
     <properties>
