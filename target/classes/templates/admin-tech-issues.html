@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Support Tickets | StaffLaunch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container"><a class="navbar-brand" th:href="@{/students/dashboard}"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a></div>
+    </nav>
+    <div class="container">
+        <h3 class="mb-4"><i class="fas fa-headset text-danger me-2"></i>IT Support Tickets</h3>
+        
+        <div class="card shadow-sm border-0">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Employee</th>
+                        <th>Asset & Category</th>
+                        <th>Description</th>
+                        <th>Resolution Type</th>
+                        <th class="text-center">Status / Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="ticket : ${tickets}">
+                        <td class="small" th:text="${#temporals.format(ticket.reportDate, 'dd-MMM-yyyy HH:mm')}"></td>
+                        <td>
+                            <strong th:text="${ticket.student.firstName + ' ' + ticket.student.lastName}"></strong><br>
+                            <span class="text-muted small" th:text="${ticket.student.email}"></span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary mb-1" th:text="${ticket.issueCategory}"></span><br>
+                            <small th:text="${ticket.asset}"></small>
+                        </td>
+                        <td class="small" th:text="${ticket.description}"></td>
+                        <td class="fw-bold text-muted small" th:text="${ticket.resolutionType}"></td>
+                        <td class="text-center" style="min-width: 200px;">
+                            <span th:if="${ticket.status == 'Closed'}" class="badge bg-success w-100 py-2">Closed</span>
+                            <span th:if="${ticket.status == 'Withdrawn'}" class="badge bg-secondary w-100 py-2">Withdrawn by User</span>
+                            
+                            <form th:if="${ticket.status == 'Pending'}" th:action="@{/admin/resolve-ticket/{id}(id=${ticket.id})}" method="post">
+                                <div class="input-group input-group-sm">
+                                    <select name="resolutionType" class="form-select border-success" required>
+                                        <option value="">Resolution...</option>
+                                        <option value="Hardware Repaired">Repaired</option>
+                                        <option value="Hardware Replaced">Replaced</option>
+                                        <option value="Software Patched">Software Patched</option>
+                                        <option value="Request Rejected">Rejected</option>
+                                    </select>
+                                    <button class="btn btn-success" type="submit">Close</button>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,6 @@
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/entity/Student.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/Application.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/config/SecurityConfig.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/controller/StudentController.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/config/CustomUserDetailsService.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/repository/StudentRepository.java

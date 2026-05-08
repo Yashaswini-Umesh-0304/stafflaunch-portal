@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration | StaffLaunch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border-radius: 15px; border: none; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-light bg-transparent mt-3">
+    <div class="container">
+        <a class="text-decoration-none text-secondary fw-bold" 
+           th:href="${#authorization.expression('hasRole(''ADMIN'')')} ? @{/students/dashboard} : @{/home}">
+           <i class="fas fa-arrow-left me-2"></i>
+           <span th:text="${#authorization.expression('hasRole(''ADMIN'')')} ? 'Back to Dashboard' : 'Back to Home'">Back</span>
+        </a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-user-plus me-2"></i>
+                        <span th:text="${#authorization.expression('hasRole(''ADMIN'')')} ? 'Admin: Pre-Allot Assets' : 'Employee Registration'">Registration</span>
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="${#authorization.expression('hasRole(''ADMIN'')')} ? @{/students/add-manual} : @{/add-user}" th:object="${student}" method="post">
+                        
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label small fw-bold">First Name</label>
+                                <input type="text" th:field="*{firstName}" class="form-control" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label small fw-bold">Last Name</label>
+                                <input type="text" th:field="*{lastName}" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Official Email</label>
+                            <input type="email" th:field="*{email}" class="form-control" required>
+                            <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger small mt-1 mb-0 fw-bold"></p>
+                        </div>
+
+                        <div class="mb-3" sec:authorize="hasRole('ADMIN')">
+                            <label class="form-label small fw-bold text-primary">Assign IT Asset Bundle</label>
+                            <select th:field="*{assets}" class="form-select border-primary">
+                                <option value="">-- No Assets Assigned --</option>
+                                <option value="Workstation: MacBook Pro M3 + 27-inch Dell Monitor">Power User (MacBook + 4K Monitor)</option>
+                                <option value="Workstation: Dell Latitude + Wireless Mouse">Standard (Dell Laptop + Peripheral)</option>
+                                <option value="Mobile: iPad Air + Apple Pencil">Design Bundle (iPad + Pencil)</option>
+                                <option value="Remote: Lenovo ThinkPad + Global VPN Router">Remote Bundle (Laptop + VPN)</option>
+                            </select>
+                        </div>
+
+                        <div sec:authorize="!hasRole('ADMIN')">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Username</label>
+                                <input type="text" th:field="*{username}" class="form-control" required>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col">
+                                    <label class="form-label small fw-bold">Phone Number</label>
+                                    <input type="text" th:field="*{phoneNumber}" class="form-control">
+                                </div>
+                                <div class="col">
+                                    <label class="form-label small fw-bold">Date of Birth</label>
+                                    <input type="date" th:field="*{dob}" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold">Password</label>
+                                <input type="password" th:field="*{password}" class="form-control" required>
+                                <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger small mt-1 mb-0 fw-bold"></p>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary py-2 fw-bold shadow-sm" 
+                                    th:text="${#authorization.expression('hasRole(''ADMIN'')')} ? 'Save to Directory' : 'Request Access'">
+                                Submit
+                            </button>
+                            <a th:if="${!#authorization.expression('hasRole(''ADMIN'')')}" th:href="@{/login}" class="btn btn-link text-muted small text-decoration-none text-center">
+                                Already registered? Login
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
