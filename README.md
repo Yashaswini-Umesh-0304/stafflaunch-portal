@@ -37,3 +37,10 @@ This project was built to transition a standard organizational directory into an
 3. Open a terminal in the root directory and run:
    ```bash
    mvn spring-boot:run
+4. Access the application in your browser at http://localhost:8080.
+
+## Default Administrator Credentials:
+
+* **Email/Username:** admin@drait.edu.in / admin
+* **Password:** kodnest123
+(Note: A default admin is seeded automatically upon startup).
