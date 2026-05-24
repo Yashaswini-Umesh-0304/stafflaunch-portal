@@ -9,7 +9,7 @@
 <body class="bg-light">
 <nav class="navbar navbar-dark bg-dark mb-4">
     <div class="container">
-        <a class="navbar-brand" th:href="@{/students/dashboard}"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+        <a class="navbar-brand" th:href="@{/employees/dashboard}"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
     </div>
 </nav>
 <div class="container">
@@ -24,7 +24,7 @@
                     <td th:text="${user.firstName + ' ' + user.lastName}" class="fw-bold"></td>
                     <td th:text="${user.email}"></td>
                     <td class="text-center">
-                        <a th:href="@{/students/approve/{id}(id=${user.id})}" class="btn btn-sm btn-success">Approve Account</a>
+                        <a th:href="@{/employees/approve/{id}(id=${user.id})}" class="btn btn-sm btn-success">Approve Account</a>
                     </td>
                 </tr>
             </tbody>

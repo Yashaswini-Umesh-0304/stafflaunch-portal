@@ -74,7 +74,7 @@
     <div class="modal fade" id="profileModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content border-0 shadow">
-                <form th:action="@{/students/update/{id}(id=${user.id})}" method="post">
+                <form th:action="@{/employees/update/{id}(id=${user.id})}" method="post">
                     <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title"><i class="fas fa-user me-2"></i>Edit Profile</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -139,7 +139,7 @@
                               <div class="alert alert-info small border-info">
                                   <i class="fas fa-info-circle me-2"></i>No hardware is officially assigned to your record yet. If you have already received your physical IT assets, please claim them below.
                               </div>
-                              <form th:action="@{/students/claim-asset}" method="post">
+                              <form th:action="@{/employees/claim-asset}" method="post">
                                   <div class="mb-4">
                                       <label class="form-label small fw-bold">Select Received IT Asset Bundle</label>
                                       <select name="assets" class="form-select border-success" required>
@@ -165,7 +165,7 @@
                               </div>
 
                               <div class="d-grid gap-2">
-                                  <form th:if="${!user.assetAcknowledged}" th:action="@{/students/acknowledge-asset}" method="post">
+                                  <form th:if="${!user.assetAcknowledged}" th:action="@{/employees/acknowledge-asset}" method="post">
                                       <button type="submit" class="btn btn-success w-100 fw-bold">Confirm Receipt of Assets</button>
                                   </form>
                               </div>
@@ -175,7 +175,7 @@
                       <div class="tab-pane fade" id="issues" role="tabpanel">
                           <div class="d-flex justify-content-between align-items-center mb-3">
                               <h6 class="fw-bold mb-0">My Support Tickets</h6>
-                              <a th:href="@{/students/report-issue}" class="btn btn-sm btn-danger fw-bold"><i class="fas fa-exclamation-triangle me-1"></i>Report New Issue</a>
+                              <a th:href="@{/employees/report-issue}" class="btn btn-sm btn-danger fw-bold"><i class="fas fa-exclamation-triangle me-1"></i>Report New Issue</a>
                           </div>
                           
                           <div class="table-responsive">
@@ -195,7 +195,7 @@
                                               <span th:if="${issue.status == 'Closed'}" class="badge bg-success w-100">Closed</span>
                                               <span th:if="${issue.status == 'Withdrawn'}" class="badge bg-secondary w-100">Withdrawn</span>
                                               
-                                              <form th:if="${issue.status == 'Pending'}" th:action="@{/students/cancel-issue/{id}(id=${issue.id})}" method="post">
+                                              <form th:if="${issue.status == 'Pending'}" th:action="@{/employees/cancel-issue/{id}(id=${issue.id})}" method="post">
                                                   <div class="btn-group w-100">
                                                       <span class="btn btn-warning btn-sm text-dark disabled" style="opacity: 1;">Pending</span>
                                                       <button type="submit" class="btn btn-outline-danger btn-sm" title="Cancel Request"><i class="fas fa-times"></i></button>
@@ -222,23 +222,23 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="list-group">
-                        <a th:href="@{/students/resources/welcome-manual}" class="list-group-item list-group-item-action py-3 d-flex justify-content-between align-items-center text-dark">
+                        <a th:href="@{/employees/resources/welcome-manual}" class="list-group-item list-group-item-action py-3 d-flex justify-content-between align-items-center text-dark">
                             <span><i class="fas fa-flag-checkered me-3 text-secondary"></i>The "Welcome" Manual</span>
                             <i th:if="${user.readArticles != null && user.readArticles.contains('welcome-manual')}" class="fas fa-check-circle text-success fs-5"></i>
                         </a>
-                        <a th:href="@{/students/resources/engineering-excellence}" class="list-group-item list-group-item-action py-3 d-flex justify-content-between align-items-center text-dark">
+                        <a th:href="@{/employees/resources/engineering-excellence}" class="list-group-item list-group-item-action py-3 d-flex justify-content-between align-items-center text-dark">
                             <span><i class="fas fa-code me-3 text-secondary"></i>Engineering Excellence</span>
                             <i th:if="${user.readArticles != null && user.readArticles.contains('engineering-excellence')}" class="fas fa-check-circle text-success fs-5"></i>
                         </a>
-                        <a th:href="@{/students/resources/diversity-equity-inclusion}" class="list-group-item list-group-item-action py-3 d-flex justify-content-between align-items-center text-dark">
+                        <a th:href="@{/employees/resources/diversity-equity-inclusion}" class="list-group-item list-group-item-action py-3 d-flex justify-content-between align-items-center text-dark">
                             <span><i class="fas fa-globe me-3 text-secondary"></i>Diversity, Equity & Inclusion (DEI)</span>
                             <i th:if="${user.readArticles != null && user.readArticles.contains('diversity-equity-inclusion')}" class="fas fa-check-circle text-success fs-5"></i>
                         </a>
-                        <a th:href="@{/students/resources/agile-fundamentals}" class="list-group-item list-group-item-action py-3 d-flex justify-content-between align-items-center text-dark">
+                        <a th:href="@{/employees/resources/agile-fundamentals}" class="list-group-item list-group-item-action py-3 d-flex justify-content-between align-items-center text-dark">
                             <span><i class="fas fa-sync-alt me-3 text-secondary"></i>Agile Fundamentals</span>
                             <i th:if="${user.readArticles != null && user.readArticles.contains('agile-fundamentals')}" class="fas fa-check-circle text-success fs-5"></i>
                         </a>
-                        <a th:href="@{/students/resources/data-privacy}" class="list-group-item list-group-item-action py-3 d-flex justify-content-between align-items-center text-dark">
+                        <a th:href="@{/employees/resources/data-privacy}" class="list-group-item list-group-item-action py-3 d-flex justify-content-between align-items-center text-dark">
                             <span><i class="fas fa-shield-alt me-3 text-secondary"></i>Data Privacy & Security Protocols</span>
                             <i th:if="${user.readArticles != null && user.readArticles.contains('data-privacy')}" class="fas fa-check-circle text-success fs-5"></i>
                         </a>

@@ -24,14 +24,14 @@ public class SecurityConfig {
                 // Static resources
                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                 // Admin-only pages (Now includes /admin/tickets/**)
-                .requestMatchers("/students/approvals", "/students/add-manual", "/students/approve/**", "/students/delete/**", "/admin/tickets/**").hasRole("ADMIN")
+                .requestMatchers("/employees/approvals", "/employees/add-manual", "/employees/approve/**", "/employees/delete/**", "/admin/tickets/**").hasRole("ADMIN")
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/students/dashboard", true)
+                .defaultSuccessUrl("/employees/dashboard", true)
                 .permitAll()
             )
             .logout(logout -> logout

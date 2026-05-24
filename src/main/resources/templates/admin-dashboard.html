@@ -28,7 +28,7 @@
         
         <div class="row g-4">
             <div class="col-md-4">
-                <a th:href="@{/students/approvals}" class="card tile-card shadow-sm p-4 text-center">
+                <a th:href="@{/employees/approvals}" class="card tile-card shadow-sm p-4 text-center">
                     <div class="icon-circle bg-danger text-white mx-auto position-relative">
                         <i class="fas fa-user-clock fa-2x"></i>
                         <span th:if="${pendingCount > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark border border-light" th:text="${pendingCount}"></span>
@@ -39,7 +39,7 @@
             </div>
 
             <div class="col-md-4">
-                <a th:href="@{/students/list}" class="card tile-card shadow-sm p-4 text-center">
+                <a th:href="@{/employees/list}" class="card tile-card shadow-sm p-4 text-center">
                     <div class="icon-circle bg-primary text-white mx-auto position-relative">
                         <i class="fas fa-users fa-2x"></i>
                         <span th:if="${activeCount > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark border border-light" th:text="${activeCount}"></span>

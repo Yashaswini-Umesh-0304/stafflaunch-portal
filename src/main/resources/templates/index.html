@@ -9,7 +9,7 @@
 <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" th:href="@{/students/dashboard}"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+            <a class="navbar-brand" th:href="@{/employees/dashboard}"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
         </div>
     </nav>
     <div class="container">
@@ -31,15 +31,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="s : ${students}">
-                        <td th:text="${s.firstName}"></td>
-                        <td th:text="${s.lastName}"></td>
-                        <td th:text="${s.email}"></td>
-                        <td th:text="${s.phoneNumber}"></td>
-                        <td th:text="${s.assets}"></td>
+                    <tr th:each="employee : ${employees}">
+                        <td th:text="${employee.firstName}"></td>
+                        <td th:text="${employee.lastName}"></td>
+                        <td th:text="${employee.email}"></td>
+                        <td th:text="${employee.phoneNumber}"></td>
+                        <td th:text="${employee.assets}"></td>
                         <td class="text-center">
-                            <a th:href="@{/students/edit/{id}(id=${s.id})}" class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i> Edit</a>
-                            <a th:href="@{/students/delete/{id}(id=${s.id})}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i> Delete</a>
+                            <a th:href="@{/employees/edit/{id}(id=${employee.id})}" class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i> Edit</a>
+                            <a th:href="@{/employees/delete/{id}(id=${employee.id})}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i> Delete</a>
                         </td>
                     </tr>
                 </tbody>
