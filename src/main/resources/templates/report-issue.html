@@ -9,7 +9,7 @@
 </head>
 <body>
 <nav class="navbar navbar-dark bg-dark mb-4">
-    <div class="container"><a class="navbar-brand" th:href="@{/students/dashboard}"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a></div>
+    <div class="container"><a class="navbar-brand" th:href="@{/employees/dashboard}"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a></div>
 </nav>
 
 <div class="container mt-5">
@@ -20,7 +20,7 @@
                     <h5 class="mb-0 fw-bold"><i class="fas fa-tools me-2"></i>Report Technical Issue</h5>
                 </div>
                 <div class="card-body p-4">
-                    <form th:action="@{/students/submit-issue}" method="post">
+                    <form th:action="@{/employees/submit-issue}" method="post">
                         
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Select Affected Asset</label>
