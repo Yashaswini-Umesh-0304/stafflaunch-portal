@@ -14,7 +14,9 @@
 
 <nav class="navbar navbar-dark bg-dark shadow-sm">
     <div class="container">
-        <a class="navbar-brand" th:href="@{/employees/list}"><i class="fas fa-edit me-2"></i>Profile Management</a>
+        <a class="navbar-brand" th:href="@{/employees/list}">
+            <i class="fas fa-arrow-left me-2"></i>Back to Employee Directory
+        </a>
     </div>
 </nav>
 
@@ -38,9 +40,25 @@
                             <input type="text" th:field="*{lastName}" class="form-control">
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Official Email</label>
+                            <input type="email" th:field="*{email}" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Phone</label>
+                            <input type="text" th:field="*{phoneNumber}" class="form-control">
+                        </div>
+
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Email / Username</label>
-                            <input type="text" th:field="*{email}" class="form-control" required>
+                            <label class="form-label fw-bold">Allotted Assets</label>
+                            <select th:field="*{assets}" class="form-select">
+                                <option value="">-- No Assets Assigned --</option>
+                                <option value="Workstation: MacBook Pro M3 + 27-inch Dell Monitor">Power User (MacBook + 4K Monitor)</option>
+                                <option value="Workstation: Dell Latitude + Wireless Mouse">Standard (Dell Laptop + Peripheral)</option>
+                                <option value="Mobile: iPad Air + Apple Pencil">Design Bundle (iPad + Pencil)</option>
+                                <option value="Remote: Lenovo ThinkPad + Global VPN Router">Remote Bundle (Laptop + VPN)</option>
+                            </select>
                         </div>
 
                         <div class="d-grid gap-2">

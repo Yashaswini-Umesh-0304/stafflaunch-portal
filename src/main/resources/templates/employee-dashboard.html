@@ -23,7 +23,7 @@
     <div class="container">
         
         <div th:if="${param.issueReported}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-check-circle me-2"></i><strong>Success!</strong> Your technical issue has been reported and sent to the Admin.
+            <i class="fas fa-check-circle me-2"></i><strong>Success!</strong> Your technical issue has been reported.
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <div th:if="${param.issueCancelled}" class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
@@ -31,11 +31,24 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <div th:if="${param.claimSuccess}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-box-open me-2"></i><strong>Claimed!</strong> Your IT assets have been successfully recorded and acknowledged.
+            <i class="fas fa-box-open me-2"></i><strong>Claimed!</strong> Your IT assets have been successfully recorded.
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <div th:if="${param.assetSuccess}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
             <i class="fas fa-clipboard-check me-2"></i><strong>Acknowledged!</strong> Thank you for confirming receipt of your hardware.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${param.profileUpdated}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-user-check me-2"></i><strong>Profile Updated!</strong> Your changes have been successfully saved.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${param.error != null && param.error[0] == 'wrongpassword'}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i><strong>Update Failed:</strong> The current password you entered is incorrect.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${param.error != null && param.error[0] == 'passwordmismatch'}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i><strong>Update Failed:</strong> Your new passwords did not match.
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
@@ -98,17 +111,42 @@
                             <label class="form-label small fw-bold">Official Email</label>
                             <input type="email" name="email" th:value="${user.email}" class="form-control" required>
                         </div>
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label small fw-bold">Phone Number</label>
+                                <input type="text" name="phoneNumber" th:value="${user.phoneNumber}" class="form-control">
+                            </div>
+                            <div class="col">
+                                <label class="form-label small fw-bold">Date of Birth</label>
+                                <input type="date" name="dob" th:value="${user.dob}" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        <h6 class="fw-bold mb-3">Change Password (Optional)</h6>
+                        
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Phone Number</label>
-                            <input type="text" name="phoneNumber" th:value="${user.phoneNumber}" class="form-control">
+                            <label class="form-label small fw-bold">Current Password <span class="fw-normal text-muted">(Required to change password)</span></label>
+                            <input type="password" name="oldPassword" class="form-control" placeholder="••••••••">
                         </div>
-                        <div class="mb-4">
-                            <label class="form-label small fw-bold">New Password (Leave blank to keep current)</label>
-                            <input type="password" name="password" class="form-control" placeholder="Min 6 characters">
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label small fw-bold">New Password</label>
+                                <input type="password" name="newPassword" class="form-control" placeholder="Min 6 characters">
+                            </div>
+                            <div class="col">
+                                <label class="form-label small fw-bold">Confirm New</label>
+                                <input type="password" name="confirmPassword" class="form-control" placeholder="Min 6 characters">
+                            </div>
                         </div>
+                        
+                        <div class="alert alert-secondary small py-2 mb-0 border-0">
+                            <i class="fas fa-info-circle me-1"></i> Changing login credentials such as email, username, or password will log you out. Login again with new credentials.
+                        </div>
+                        
                     </div>
                     <div class="modal-footer bg-light">
-                        <button type="submit" class="btn btn-primary fw-bold w-100">Save Changes & Re-login</button>
+                        <button type="submit" class="btn btn-primary fw-bold w-100">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -253,6 +291,12 @@
         document.addEventListener("DOMContentLoaded", function() {
             const urlParams = new URLSearchParams(window.location.search);
             const assetModalEl = document.getElementById('assetModal');
+            
+            // Re-open profile modal if there's a password error
+            if (urlParams.has('error')) {
+                const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('profileModal'));
+                modal.show();
+            }
             
             if (urlParams.has('issueReported') || urlParams.has('issueCancelled')) {
                 const modal = bootstrap.Modal.getOrCreateInstance(assetModalEl);

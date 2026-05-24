@@ -112,26 +112,64 @@ public class EmployeeController {
     }
 
     @PostMapping("/employees/update/{id}")
-    public String update(@PathVariable("id") long id, @ModelAttribute("employee") Employee employee) {
-        Employee existing = repository.findById(id).orElseThrow();
-        existing.setFirstName(employee.getFirstName());
-        existing.setLastName(employee.getLastName());
-        existing.setUsername(employee.getUsername());
-        existing.setEmail(employee.getEmail());
-        existing.setPhoneNumber(employee.getPhoneNumber());
-        existing.setDob(employee.getDob());
+    public String update(@PathVariable("id") long id, 
+                         @ModelAttribute("employee") Employee employee,
+                         @RequestParam(value = "oldPassword", required = false) String oldPassword,
+                         @RequestParam(value = "newPassword", required = false) String newPassword,
+                         @RequestParam(value = "confirmPassword", required = false) String confirmPassword) {
         
-        if(employee.getPassword() != null && !employee.getPassword().trim().isEmpty()) {
-             if(employee.getPassword().length() >= 6) {
-                 existing.setPassword(encoder.encode(employee.getPassword()));
-             }
+        Employee existing = repository.findById(id).orElseThrow();
+        boolean credentialsChanged = false;
+
+        // 1. Check if core credentials were changed
+        if (employee.getUsername() != null && !employee.getUsername().equals(existing.getUsername())) {
+            existing.setUsername(employee.getUsername());
+            credentialsChanged = true;
         }
+        if (employee.getEmail() != null && !employee.getEmail().equals(existing.getEmail())) {
+            existing.setEmail(employee.getEmail());
+            credentialsChanged = true;
+        }
+
+        // 2. Update standard fields (Smart Mapping)
+        if (employee.getFirstName() != null) existing.setFirstName(employee.getFirstName());
+        if (employee.getLastName() != null) existing.setLastName(employee.getLastName());
+        if (employee.getPhoneNumber() != null) existing.setPhoneNumber(employee.getPhoneNumber());
+        if (employee.getDob() != null) existing.setDob(employee.getDob());
+        if (employee.getAssets() != null) existing.setAssets(employee.getAssets());
+        
+        // 3. Secure Password Update Logic
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+            // Regular users must verify their old password to change it
+            if (!isAdmin) {
+                if (!encoder.matches(oldPassword, existing.getPassword())) {
+                    return "redirect:/employees/dashboard?error=wrongpassword";
+                }
+                if (!newPassword.equals(confirmPassword)) {
+                    return "redirect:/employees/dashboard?error=passwordmismatch";
+                }
+            }
+            // If verification passes (or if Admin is forcing a reset), hash and save
+            existing.setPassword(encoder.encode(newPassword));
+            credentialsChanged = true;
+        }
+        
         repository.save(existing);
         
+        // 4. Smart Redirect Logic
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        
         if (isAdmin) return "redirect:/employees/list";
-        return "redirect:/login?logout"; 
+        
+        if (credentialsChanged) {
+            return "redirect:/login?logout"; 
+        }
+        
+        return "redirect:/employees/dashboard?profileUpdated"; 
     }
 
     @GetMapping("/employees/list")
