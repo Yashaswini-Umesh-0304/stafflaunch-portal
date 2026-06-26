@@ -2,6 +2,8 @@ package net.javaguides.springboot.tutorial.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "employees")
@@ -30,11 +32,18 @@ public class Employee {
     private String phoneNumber;
     private String dob;
     
-    private String assets; 
+    // RELATIONAL MAPPING
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "hardware_bundle_id")
+    private HardwareBundle assetBundle;
+
     private boolean assetAcknowledged = false;
     
-    // NEW FIELD: Tracks which articles the user has read (comma separated)
-    private String readArticles = "";
+    // RELATIONAL MAPPING
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "employee_read_articles", joinColumns = @JoinColumn(name = "employee_id"))
+    @Column(name = "article_slug")
+    private List<String> readArticles = new ArrayList<>();
 
     private String role; 
     private boolean enabled = false; 
@@ -58,12 +67,15 @@ public class Employee {
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     public String getDob() { return dob; }
     public void setDob(String dob) { this.dob = dob; }
-    public String getAssets() { return assets; }
-    public void setAssets(String assets) { this.assets = assets; }
+    
+    // Maintains backward compatibility for your HTML
+    public String getAssets() { return assetBundle != null ? assetBundle.getDescription() : null; }
+    public void setAssetBundle(HardwareBundle assetBundle) { this.assetBundle = assetBundle; }
+    
     public boolean isAssetAcknowledged() { return assetAcknowledged; }
     public void setAssetAcknowledged(boolean assetAcknowledged) { this.assetAcknowledged = assetAcknowledged; }
-    public String getReadArticles() { return readArticles; }
-    public void setReadArticles(String readArticles) { this.readArticles = readArticles; }
+    public List<String> getReadArticles() { return readArticles; }
+    public void setReadArticles(List<String> readArticles) { this.readArticles = readArticles; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
     public boolean isEnabled() { return enabled; }

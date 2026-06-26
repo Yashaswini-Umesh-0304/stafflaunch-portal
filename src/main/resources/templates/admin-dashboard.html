@@ -7,9 +7,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { background-color: #f8f9fa; }
-        .tile-card { transition: transform 0.2s, box-shadow 0.2s; height: 100%; border: none; border-radius: 15px; text-decoration: none; display: block; color: inherit; }
-        .tile-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; color: inherit; }
+        .tile-card { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; height: 100%; border: none; border-radius: 15px; }
+        .tile-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
         .icon-circle { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+        .text-decoration-none { text-decoration: none !important; }
     </style>
 </head>
 <body>
@@ -21,47 +22,201 @@
     </nav>
 
     <div class="container">
-        <div class="mb-5">
-            <h2 class="fw-bold">Administrator Dashboard</h2>
-            <p class="text-muted">System oversight, personnel management, and support requests.</p>
+        
+        <div th:if="${param.profileUpdated}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-user-check me-2"></i><strong>Profile Updated!</strong> Your changes have been successfully saved.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="mb-5 mt-2">
+            <h2 class="fw-bold">Welcome, <span th:text="${user.firstName}">Admin</span>!</h2>
+            <p class="text-muted">Select a module below to manage the enterprise system.</p>
         </div>
         
         <div class="row g-4">
-            <div class="col-md-4">
-                <a th:href="@{/employees/approvals}" class="card tile-card shadow-sm p-4 text-center">
-                    <div class="icon-circle bg-danger text-white mx-auto position-relative">
-                        <i class="fas fa-user-clock fa-2x"></i>
-                        <span th:if="${pendingCount > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark border border-light" th:text="${pendingCount}"></span>
+            
+            <div class="col-md-6 col-lg-3">
+                <a th:href="@{/employees/approvals}" class="text-decoration-none text-dark">
+                    <div class="card tile-card shadow-sm p-4 text-center">
+                        <div class="icon-circle bg-warning text-dark mx-auto position-relative">
+                            <i class="fas fa-user-clock fa-2x"></i>
+                            <span th:if="${pendingCount > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" th:text="${pendingCount}"></span>
+                        </div>
+                        <h5 class="fw-bold">Pending Approvals</h5>
+                        <p class="text-muted small mb-0">Review and approve new access requests.</p>
                     </div>
-                    <h4 class="fw-bold">Pending Approvals</h4>
-                    <p class="text-muted small">Review and approve new employee registration requests.</p>
                 </a>
             </div>
 
-            <div class="col-md-4">
-                <a th:href="@{/employees/list}" class="card tile-card shadow-sm p-4 text-center">
-                    <div class="icon-circle bg-primary text-white mx-auto position-relative">
-                        <i class="fas fa-users fa-2x"></i>
-                        <span th:if="${activeCount > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark border border-light" th:text="${activeCount}"></span>
+            <div class="col-md-6 col-lg-3">
+                <a th:href="@{/employees/list}" class="text-decoration-none text-dark">
+                    <div class="card tile-card shadow-sm p-4 text-center">
+                        <div class="icon-circle bg-success text-white mx-auto">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                        <h5 class="fw-bold">Employee Directory</h5>
+                        <p class="text-muted small mb-0">Manage active users and IT assignments.</p>
+                        <p class="text-success small fw-bold mt-2 mb-0" th:text="${activeCount} + ' Active Users'"></p>
                     </div>
-                    <h4 class="fw-bold">Employee Directory</h4>
-                    <p class="text-muted small">Manage verified personnel, edit records, and update details.</p>
                 </a>
             </div>
 
-            <div class="col-md-4">
-                <a th:href="@{/admin/tickets}" class="card tile-card shadow-sm p-4 text-center">
-                    <div class="icon-circle bg-success text-white mx-auto position-relative">
-                        <i class="fas fa-headset fa-2x"></i>
-                        <span th:if="${pendingTickets > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark border border-light" th:text="${pendingTickets}"></span>
+            <div class="col-md-6 col-lg-3">
+                <a th:href="@{/admin/tickets}" class="text-decoration-none text-dark">
+                    <div class="card tile-card shadow-sm p-4 text-center">
+                        <div class="icon-circle bg-danger text-white mx-auto position-relative">
+                            <i class="fas fa-headset fa-2x"></i>
+                            <span th:if="${pendingTickets > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark border border-light" th:text="${pendingTickets}"></span>
+                        </div>
+                        <h5 class="fw-bold">IT Support Desk</h5>
+                        <p class="text-muted small mb-0">Resolve active employee technical issues.</p>
                     </div>
-                    <h4 class="fw-bold">Support Tickets</h4>
-                    <p class="text-muted small">Resolve technical issues and hardware replacement requests.</p>
                 </a>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="card tile-card shadow-sm p-4 text-center" data-bs-toggle="modal" data-bs-target="#profileModal">
+                    <div class="icon-circle bg-primary text-white mx-auto">
+                        <i class="fas fa-user-edit fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold">Admin Profile</h5>
+                    <p class="text-muted small mb-0">Manage system admin credentials and details.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <form th:action="@{/employees/update/{id}(id=${user.id})}" method="post">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="fas fa-user-shield me-2"></i>Edit Admin Profile</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label small fw-bold">First Name</label>
+                                <input type="text" name="firstName" th:value="${user.firstName}" class="form-control" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label small fw-bold">Last Name</label>
+                                <input type="text" name="lastName" th:value="${user.lastName}" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Official Email (Receives Alerts)</label>
+                            <input type="email" name="email" th:value="${user.email}" class="form-control" required>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label small fw-bold">Phone Number</label>
+                                <input type="text" name="phoneNumber" th:value="${user.phoneNumber}" class="form-control" id="profilePhoneInput">
+                                <div id="profilePhoneError" class="text-danger small mt-1 d-none fw-bold">Must be 10 digits starting with 6, 7, 8, or 9.</div>
+                            </div>
+                            <div class="col">
+                                <label class="form-label small fw-bold">Date of Birth</label>
+                                <input type="date" name="dob" th:value="${user.dob}" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" name="username" th:value="${user.username}">
+                        
+                        <hr class="my-4">
+                        <h6 class="fw-bold mb-3">Change Password (Optional)</h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label small fw-bold">New Password</label>
+                                <input type="password" name="newPassword" class="form-control" placeholder="Min 6 characters" id="newPassword">
+                            </div>
+                            <div class="col">
+                                <label class="form-label small fw-bold">Confirm New</label>
+                                <input type="password" name="confirmPassword" class="form-control" placeholder="Min 6 characters" id="confirmPassword">
+                            </div>
+                        </div>
+                        <div id="passwordError" class="text-danger small mb-3 d-none fw-bold">Passwords do not match.</div>
+                        
+                        <div class="alert alert-secondary small py-2 mb-0 border-0">
+                            <i class="fas fa-info-circle me-1"></i> Changing login credentials will log you out.
+                        </div>
+                        
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="submit" class="btn btn-primary fw-bold w-100" id="profileSubmitBtn">Save Changes</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Real-time Form Validation Logic
+            const phoneInput = document.getElementById('profilePhoneInput');
+            const phoneError = document.getElementById('profilePhoneError');
+            const newPassword = document.getElementById('newPassword');
+            const confirmPassword = document.getElementById('confirmPassword');
+            const passwordError = document.getElementById('passwordError');
+            const submitBtn = document.getElementById('profileSubmitBtn');
+
+            function validateProfileForm() {
+                let isValid = true;
+
+                // Phone Validation
+                if (phoneInput) {
+                    phoneInput.value = phoneInput.value.replace(/\D/g, '');
+                    const phoneVal = phoneInput.value;
+                    if (phoneVal.length > 0) {
+                        const phoneRegex = /^[6-9]\d{9}$/;
+                        if (!phoneRegex.test(phoneVal)) {
+                            phoneError.classList.remove('d-none');
+                            isValid = false;
+                        } else {
+                            phoneError.classList.add('d-none');
+                        }
+                    } else {
+                        phoneError.classList.add('d-none');
+                    }
+                }
+
+                // Password Matching Validation
+                if (newPassword && confirmPassword) {
+                    const npVal = newPassword.value;
+                    const cpVal = confirmPassword.value;
+
+                    if (npVal.length > 0 || cpVal.length > 0) {
+                        if (npVal !== cpVal) {
+                            passwordError.classList.remove('d-none');
+                            isValid = false;
+                        } else {
+                            passwordError.classList.add('d-none');
+                        }
+                    } else {
+                        passwordError.classList.add('d-none');
+                    }
+                }
+
+                if (submitBtn) {
+                    submitBtn.disabled = !isValid;
+                }
+            }
+
+            if (phoneInput) phoneInput.addEventListener('input', validateProfileForm);
+            if (newPassword) newPassword.addEventListener('input', validateProfileForm);
+            if (confirmPassword) confirmPassword.addEventListener('input', validateProfileForm);
+            
+            // Re-open profile modal if there's a password error
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('error')) {
+                const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('profileModal'));
+                modal.show();
+            }
+        });
+    </script>
 </body>
 </html>

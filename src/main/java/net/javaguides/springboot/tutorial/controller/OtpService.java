@@ -1,25 +1,40 @@
 package net.javaguides.springboot.tutorial.controller;
 
+import net.javaguides.springboot.tutorial.entity.OtpToken;
+import net.javaguides.springboot.tutorial.repository.OtpTokenRepository;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class OtpService {
     
-    // Temporarily stores OTPs in memory mapped to the user's email
-    private final ConcurrentHashMap<String, String> otpStorage = new ConcurrentHashMap<>();
+    private final OtpTokenRepository repo;
+
+    public OtpService(OtpTokenRepository repo) { this.repo = repo; }
 
     public String generateAndStoreOtp(String email) {
+        repo.deleteByEmail(email); // Clean previous
         String otp = String.format("%06d", new Random().nextInt(999999));
-        otpStorage.put(email, otp);
+        
+        OtpToken token = new OtpToken();
+        token.setEmail(email);
+        token.setOtpCode(otp);
+        token.setExpirationTime(LocalDateTime.now().plusMinutes(10));
+        repo.save(token);
         return otp;
     }
 
     public boolean verifyOtp(String email, String otp) {
-        if (otpStorage.containsKey(email) && otpStorage.get(email).equals(otp)) {
-            otpStorage.remove(email); // Consume the OTP so it can't be reused
-            return true;
+        Optional<OtpToken> tokenOpt = repo.findByEmailAndOtpCode(email, otp);
+        if (tokenOpt.isPresent()) {
+            OtpToken token = tokenOpt.get();
+            if (token.getExpirationTime().isAfter(LocalDateTime.now())) {
+                repo.delete(token);
+                return true;
+            }
+            repo.delete(token);
         }
         return false;
     }

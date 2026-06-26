@@ -39,7 +39,12 @@
                         <td th:text="${employee.assets}"></td>
                         <td class="text-center">
                             <a th:href="@{/employees/edit/{id}(id=${employee.id})}" class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i> Edit</a>
-                            <a th:href="@{/employees/delete/{id}(id=${employee.id})}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i> Delete</a>
+                            
+                            <a th:href="@{/employees/delete/{id}(id=${employee.id})}" 
+                               th:classappend="${employee.username == 'admin'} ? 'disabled' : ''"
+                               class="btn btn-sm btn-outline-danger">
+                               <i class="fas fa-trash"></i> Delete
+                            </a>
                         </td>
                     </tr>
                 </tbody>
