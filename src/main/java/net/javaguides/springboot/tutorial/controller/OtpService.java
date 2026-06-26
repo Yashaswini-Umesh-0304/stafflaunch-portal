@@ -12,10 +12,12 @@ public class OtpService {
     
     private final OtpTokenRepository repo;
 
-    public OtpService(OtpTokenRepository repo) { this.repo = repo; }
+    public OtpService(OtpTokenRepository repo) { 
+        this.repo = repo; 
+    }
 
     public String generateAndStoreOtp(String email) {
-        repo.deleteByEmail(email); // Clean previous
+        repo.deleteByEmail(email); // Clean previous tokens
         String otp = String.format("%06d", new Random().nextInt(999999));
         
         OtpToken token = new OtpToken();
@@ -31,10 +33,10 @@ public class OtpService {
         if (tokenOpt.isPresent()) {
             OtpToken token = tokenOpt.get();
             if (token.getExpirationTime().isAfter(LocalDateTime.now())) {
-                repo.delete(token);
+                repo.delete(token); // Burn after reading
                 return true;
             }
-            repo.delete(token);
+            repo.delete(token); // Delete expired token
         }
         return false;
     }

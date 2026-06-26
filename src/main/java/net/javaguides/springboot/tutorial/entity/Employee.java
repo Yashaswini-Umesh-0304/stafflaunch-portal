@@ -32,14 +32,14 @@ public class Employee {
     private String phoneNumber;
     private String dob;
     
-    // RELATIONAL MAPPING
+    // RELATIONAL MAPPING FOR ASSETS
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "hardware_bundle_id")
     private HardwareBundle assetBundle;
 
     private boolean assetAcknowledged = false;
     
-    // RELATIONAL MAPPING
+    // RELATIONAL MAPPING FOR ARTICLES
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "employee_read_articles", joinColumns = @JoinColumn(name = "employee_id"))
     @Column(name = "article_slug")
@@ -68,7 +68,7 @@ public class Employee {
     public String getDob() { return dob; }
     public void setDob(String dob) { this.dob = dob; }
     
-    // Maintains backward compatibility for your HTML
+    // Maintains backward compatibility for your HTML templates
     public String getAssets() { return assetBundle != null ? assetBundle.getDescription() : null; }
     public void setAssetBundle(HardwareBundle assetBundle) { this.assetBundle = assetBundle; }
     
