@@ -19,11 +19,11 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // Public pages
-                .requestMatchers("/", "/home", "/login", "/signup", "/add-user").permitAll()
+                // Public pages and OTP API endpoints
+                .requestMatchers("/", "/home", "/login", "/signup", "/add-user", "/api/send-otp", "/api/verify-otp").permitAll()
                 // Static resources
                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-                // Admin-only pages (Now includes /admin/tickets/**)
+                // Admin-only pages 
                 .requestMatchers("/employees/approvals", "/employees/add-manual", "/employees/approve/**", "/employees/delete/**", "/admin/tickets/**").hasRole("ADMIN")
                 // All other requests require authentication
                 .anyRequest().authenticated()
