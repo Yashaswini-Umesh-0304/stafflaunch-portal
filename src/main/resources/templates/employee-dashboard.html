@@ -114,7 +114,8 @@
                         <div class="row mb-3">
                             <div class="col">
                                 <label class="form-label small fw-bold">Phone Number</label>
-                                <input type="text" name="phoneNumber" th:value="${user.phoneNumber}" class="form-control">
+                                <input type="text" name="phoneNumber" th:value="${user.phoneNumber}" class="form-control" id="profilePhoneInput">
+                                <div id="profilePhoneError" class="text-danger small mt-1 d-none fw-bold">Must be 10 digits starting with 6, 7, 8, or 9.</div>
                             </div>
                             <div class="col">
                                 <label class="form-label small fw-bold">Date of Birth</label>
@@ -126,19 +127,20 @@
                         <h6 class="fw-bold mb-3">Change Password (Optional)</h6>
                         
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Current Password <span class="fw-normal text-muted">(Required to change password)</span></label>
+                            <label class="form-label small fw-bold">Current Password</label>
                             <input type="password" name="oldPassword" class="form-control" placeholder="••••••••">
                         </div>
                         <div class="row mb-3">
                             <div class="col">
                                 <label class="form-label small fw-bold">New Password</label>
-                                <input type="password" name="newPassword" class="form-control" placeholder="Min 6 characters">
+                                <input type="password" name="newPassword" class="form-control" placeholder="Min 6 characters" id="newPassword">
                             </div>
                             <div class="col">
-                                <label class="form-label small fw-bold">Confirm New</label>
-                                <input type="password" name="confirmPassword" class="form-control" placeholder="Min 6 characters">
+                                <label class="form-label small fw-bold">Confirm New Password</label>
+                                <input type="password" name="confirmPassword" class="form-control" placeholder="Min 6 characters" id="confirmPassword">
                             </div>
                         </div>
+                        <div id="passwordError" class="text-danger small mb-3 d-none fw-bold">Passwords do not match.</div>
                         
                         <div class="alert alert-secondary small py-2 mb-0 border-0">
                             <i class="fas fa-info-circle me-1"></i> Changing login credentials such as email, username, or password will log you out. Login again with new credentials.
@@ -146,7 +148,7 @@
                         
                     </div>
                     <div class="modal-footer bg-light">
-                        <button type="submit" class="btn btn-primary fw-bold w-100">Save Changes</button>
+                        <button type="submit" class="btn btn-primary fw-bold w-100" id="profileSubmitBtn">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -310,6 +312,65 @@
                 const ackTab = new bootstrap.Tab(document.querySelector('#ack-tab'));
                 ackTab.show();
             }
+
+            // Real-time Form Validation Logic
+            const phoneInput = document.getElementById('profilePhoneInput');
+            const phoneError = document.getElementById('profilePhoneError');
+            const newPassword = document.getElementById('newPassword');
+            const confirmPassword = document.getElementById('confirmPassword');
+            const passwordError = document.getElementById('passwordError');
+            const submitBtn = document.getElementById('profileSubmitBtn');
+
+            function validateProfileForm() {
+                let isValid = true;
+
+                // Phone Validation
+                if (phoneInput) {
+                    // Prevent entering non-digits instantly
+                    phoneInput.value = phoneInput.value.replace(/\D/g, '');
+                    const phoneVal = phoneInput.value;
+
+                    // Only validate if they typed something (since phone might be optional)
+                    if (phoneVal.length > 0) {
+                        const phoneRegex = /^[6-9]\d{9}$/;
+                        if (!phoneRegex.test(phoneVal)) {
+                            phoneError.classList.remove('d-none');
+                            isValid = false;
+                        } else {
+                            phoneError.classList.add('d-none');
+                        }
+                    } else {
+                        phoneError.classList.add('d-none');
+                    }
+                }
+
+                // Password Matching Validation
+                if (newPassword && confirmPassword) {
+                    const npVal = newPassword.value;
+                    const cpVal = confirmPassword.value;
+
+                    if (npVal.length > 0 || cpVal.length > 0) {
+                        if (npVal !== cpVal) {
+                            passwordError.classList.remove('d-none');
+                            isValid = false;
+                        } else {
+                            passwordError.classList.add('d-none');
+                        }
+                    } else {
+                        passwordError.classList.add('d-none');
+                    }
+                }
+
+                // Enable or disable submit
+                if (submitBtn) {
+                    submitBtn.disabled = !isValid;
+                }
+            }
+
+            // Attach event listeners so it validates as they type
+            if (phoneInput) phoneInput.addEventListener('input', validateProfileForm);
+            if (newPassword) newPassword.addEventListener('input', validateProfileForm);
+            if (confirmPassword) confirmPassword.addEventListener('input', validateProfileForm);
         });
     </script>
 </body>

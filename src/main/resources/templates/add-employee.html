@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Registration | StaffLaunch</title>
+    <!-- CRITICAL: Allows Javascript to communicate with Spring Security -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -22,7 +26,7 @@
     </div>
 </nav>
 
-<div class="container mt-4">
+<div class="container mt-4 mb-5">
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-5">
             <div class="card shadow-lg border-0">
@@ -35,6 +39,7 @@
                 <div class="card-body p-4">
                     <form th:action="${#authorization.expression('hasRole(''ADMIN'')')} ? @{/employees/add-manual} : @{/add-user}" th:object="${employee}" method="post">
                         
+                        <!-- SHARED FIELDS -->
                         <div class="row mb-3">
                             <div class="col">
                                 <label class="form-label small fw-bold">First Name</label>
@@ -49,15 +54,17 @@
                         <div class="row mb-3">
                             <div class="col">
                                 <label class="form-label small fw-bold">Official Email</label>
-                                <input type="email" th:field="*{email}" class="form-control" required>
+                                <input type="email" th:field="*{email}" class="form-control" id="signupEmailInput" required>
                                 <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger small mt-1 mb-0 fw-bold"></p>
                             </div>
                             <div class="col">
                                 <label class="form-label small fw-bold">Phone</label>
-                                <input type="text" th:field="*{phoneNumber}" class="form-control">
+                                <input type="text" th:field="*{phoneNumber}" class="form-control" id="signupPhoneInput">
+                                <div id="signupPhoneError" class="text-danger small mt-1 d-none fw-bold">Must be 10 digits starting with 6, 7, 8, or 9.</div>
                             </div>
                         </div>
 
+                        <!-- ADMIN ONLY FIELD -->
                         <div class="mb-3" sec:authorize="hasRole('ADMIN')">
                             <label class="form-label small fw-bold text-primary">Assign IT Asset Bundle</label>
                             <select th:field="*{assets}" class="form-select border-primary">
@@ -69,6 +76,7 @@
                             </select>
                         </div>
 
+                        <!-- USER REGISTRATION ONLY FIELDS -->
                         <div sec:authorize="!hasRole('ADMIN')">
                             <div class="row mb-3">
                                 <div class="col">
@@ -86,13 +94,32 @@
                                 <input type="password" th:field="*{password}" class="form-control" required>
                                 <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger small mt-1 mb-0 fw-bold"></p>
                             </div>
+                            
+                            <!-- NEW DYNAMIC OTP SECTION -->
+                            <div class="mb-3 d-none p-3 bg-light rounded border" id="otpSection">
+                                <label class="form-label small fw-bold text-primary"><i class="fas fa-envelope-open-text me-2"></i>Enter Verification Code</label>
+                                <div class="input-group">
+                                    <input type="text" id="otpInput" class="form-control border-primary" placeholder="6-digit OTP">
+                                    <button type="button" class="btn btn-outline-primary fw-bold" id="verifyOtpBtn">Verify</button>
+                                </div>
+                                <div id="otpFeedback" class="small mt-2 fw-bold"></div>
+                            </div>
                         </div>
 
+                        <!-- BUTTON CONTROLS -->
                         <div class="d-grid gap-2 mt-4">
-                            <button type="submit" class="btn btn-primary py-2 fw-bold shadow-sm" 
+                            
+                            <!-- Get OTP Button (Only visible for standard signup) -->
+                            <button type="button" class="btn btn-dark py-2 fw-bold shadow-sm" id="getOtpBtn" sec:authorize="!hasRole('ADMIN')">
+                                Get OTP
+                            </button>
+                            
+                            <!-- Main Submit Button (Disabled until OTP verification for standard users) -->
+                            <button type="submit" class="btn btn-primary py-2 fw-bold shadow-sm" id="signupSubmitBtn"
                                     th:text="${#authorization.expression('hasRole(''ADMIN'')')} ? 'Save to Directory' : 'Request Access'">
                                 Submit
                             </button>
+                            
                             <div th:if="${!#authorization.expression('hasRole(''ADMIN'')')}" class="text-center mt-2">
                                 <span class="small text-muted">Already registered? <a th:href="@{/login}" class="text-primary text-decoration-none fw-bold">Login</a></span>
                             </div>
@@ -103,5 +130,111 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const phoneInput = document.getElementById('signupPhoneInput');
+        const phoneError = document.getElementById('signupPhoneError');
+        const submitBtn = document.getElementById('signupSubmitBtn');
+        
+        // OTP Elements
+        const getOtpBtn = document.getElementById('getOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const otpSection = document.getElementById('otpSection');
+        const otpInput = document.getElementById('otpInput');
+        const otpFeedback = document.getElementById('otpFeedback');
+        const emailInput = document.getElementById('signupEmailInput');
+
+        // Security headers for Fetch API
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+        // 1. Phone Validation Logic
+        function validateSignupForm() {
+            let isPhoneValid = true;
+            if (phoneInput) {
+                phoneInput.value = phoneInput.value.replace(/\D/g, '');
+                const phoneVal = phoneInput.value;
+                if (phoneVal.length > 0) {
+                    const phoneRegex = /^[6-9]\d{9}$/;
+                    if (!phoneRegex.test(phoneVal)) {
+                        phoneError.classList.remove('d-none');
+                        isPhoneValid = false;
+                    } else {
+                        phoneError.classList.add('d-none');
+                    }
+                } else {
+                    phoneError.classList.add('d-none');
+                }
+            }
+            
+            // Re-evaluates if admin button should be disabled
+            if (!getOtpBtn && submitBtn) {
+                submitBtn.disabled = !isPhoneValid;
+            }
+            return isPhoneValid;
+        }
+
+        if (phoneInput) phoneInput.addEventListener('input', validateSignupForm);
+
+        // 2. OTP Registration Flow (Only applies if 'Get OTP' button exists on page)
+        if (getOtpBtn) {
+            submitBtn.style.display = 'none'; // Hide Request Access initially
+
+            getOtpBtn.addEventListener('click', function() {
+                if (!validateSignupForm()) return;
+
+                const email = emailInput.value;
+                if (!email) {
+                    alert('Please enter your Official Email before requesting an OTP.');
+                    return;
+                }
+
+                getOtpBtn.innerText = 'Sending...';
+                getOtpBtn.disabled = true;
+
+                fetch('/api/send-otp?email=' + encodeURIComponent(email), {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        getOtpBtn.innerText = 'Resend OTP';
+                        getOtpBtn.classList.replace('btn-dark', 'btn-outline-dark');
+                        getOtpBtn.disabled = false;
+                        otpSection.classList.remove('d-none');
+                    }
+                });
+            });
+
+            verifyOtpBtn.addEventListener('click', function() {
+                const email = emailInput.value;
+                const otp = otpInput.value;
+
+                if (!otp) return;
+
+                fetch('/api/verify-otp?email=' + encodeURIComponent(email) + '&otp=' + encodeURIComponent(otp), {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.valid) {
+                        otpFeedback.innerText = '✓ OTP Verified Successfully!';
+                        otpFeedback.className = 'small mt-2 fw-bold text-success';
+                        verifyOtpBtn.disabled = true;
+                        otpInput.disabled = true;
+                        getOtpBtn.style.display = 'none';
+                        submitBtn.style.display = 'block'; // Unhide Request Access!
+                    } else {
+                        otpFeedback.innerText = 'Invalid OTP. Please check your email and try again.';
+                        otpFeedback.className = 'small mt-2 fw-bold text-danger';
+                    }
+                });
+            });
+        }
+    });
+</script>
 </body>
 </html>
