@@ -4,7 +4,7 @@ import jakarta.mail.internet.MimeMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import java.util.concurrent.CompletableFuture; // Added for background processing
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class EmailService {
@@ -17,7 +17,7 @@ public class EmailService {
     }
 
     public void sendHtmlEmail(String toEmail, String subject, String title, String bodyContent, String buttonText, String buttonUrl) {
-        // Runs the email task in a background thread so the UI never freezes!
+        // This background thread makes the app lightning fast
         CompletableFuture.runAsync(() -> {
             try {
                 MimeMessage message = mailSender.createMimeMessage();
@@ -46,10 +46,11 @@ public class EmailService {
 
                 helper.setText(htmlTemplate, true);
                 mailSender.send(message);
+                System.out.println("Email sent successfully to: " + toEmail);
                 
             } catch (Exception e) {
-                // Catching Exception (not just MessagingException) prevents the 500 Server Error
-                System.out.println("Background email failed quietly: " + e.getMessage());
+                // Catches error quietly so your app never crashes
+                System.out.println("Background email failed: " + e.getMessage());
             }
         });
     }

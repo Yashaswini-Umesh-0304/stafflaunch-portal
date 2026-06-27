@@ -84,17 +84,10 @@ public class EmployeeController {
         return Map.of("valid", isValid);
     }
 
-    @GetMapping("/")
-    public String root() { return "redirect:/home"; }
-
-    @GetMapping("/home")
-    public String home() { return "home"; }
-
-    @GetMapping("/login")
-    public String login() { return "login"; }
-
-    @GetMapping("/signup")
-    public String signup(Employee employee) { return "add-employee"; }
+    @GetMapping("/") public String root() { return "redirect:/home"; }
+    @GetMapping("/home") public String home() { return "home"; }
+    @GetMapping("/login") public String login() { return "login"; }
+    @GetMapping("/signup") public String signup(Employee employee) { return "add-employee"; }
 
     @PostMapping("/add-user")
     public String register(@Valid Employee employee, BindingResult result) {
@@ -103,7 +96,6 @@ public class EmployeeController {
         Optional<Employee> existingUser = repository.findByEmail(employee.getEmail());
         if (existingUser.isPresent()) {
             Employee existing = existingUser.get();
-            // Logic for an Admin-created user completing their registration
             if (existing.isEnabled() && (existing.getPassword() == null || existing.getPassword().isEmpty())) {
                 existing.setUsername(employee.getUsername());
                 existing.setPassword(encoder.encode(employee.getPassword()));
@@ -114,21 +106,18 @@ public class EmployeeController {
                 
                 String adminBody = "<p>Employee <b>" + existing.getFirstName() + " " + existing.getLastName() + "</b> has completed their registration and is requesting platform access.</p>";
                 emailService.sendHtmlEmail("yashaswiniumesh157@gmail.com", "New Access Request", "Access Request Submitted", adminBody, "Review Approvals", "https://stafflaunch-portal.onrender.com/employees/approvals");
-                
                 return "redirect:/login?success";
             }
             result.rejectValue("email", "error.user", "Email already exists.");
             return "add-employee";
         }
         
-        // Standard user registration
         employee.setPassword(encoder.encode(employee.getPassword()));
         employee.setRole("ROLE_USER");
         repository.save(employee);
         
         String adminBody = "<p>A new user, <b>" + employee.getFirstName() + " " + employee.getLastName() + "</b>, has requested platform access.</p>";
         emailService.sendHtmlEmail("yashaswiniumesh157@gmail.com", "New Access Request", "Access Request Submitted", adminBody, "Review Approvals", "https://stafflaunch-portal.onrender.com/employees/approvals");
-
         return "redirect:/login?pending";
     }
 
@@ -138,16 +127,13 @@ public class EmployeeController {
         employee.setEnabled(true);
         employee.setAssetAcknowledged(true);
         
-        // Link Hardware bundle if selected during manual add
         if (employee.getAssets() != null && !employee.getAssets().isEmpty()) {
             bundleRepo.findByDescription(employee.getAssets()).ifPresent(employee::setAssetBundle);
         }
-        
         repository.save(employee);
         
         String body = "<p>Hello " + employee.getFirstName() + ",</p><p>Your basic profile has been created in the StaffLaunch directory by the IT Administrator.</p><p>Please complete your registration and set your secure password by clicking the link below.</p>";
         emailService.sendHtmlEmail(employee.getEmail(), "Action Required: Complete Registration", "Welcome to the Team!", body, "Complete Sign Up", "https://stafflaunch-portal.onrender.com/signup");
-
         return "redirect:/employees/list";
     }
 
@@ -155,7 +141,6 @@ public class EmployeeController {
     public String dashboard(Model model) {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         Employee user = repository.findByEmailOrUsername(currentUsername).orElseThrow();
-        
         model.addAttribute("user", user);
 
         if (user.getRole().equals("ROLE_ADMIN")) {
@@ -166,13 +151,17 @@ public class EmployeeController {
             model.addAttribute("pendingTickets", pendingTickets);
             return "admin-dashboard";
         }
-        
         model.addAttribute("myIssues", techIssueRepository.findByEmployeeIdOrderByReportDateDesc(user.getId()));
         return "employee-dashboard";
     }
 
     @PostMapping("/employees/update/{id}")
-    public String update(@PathVariable("id") long id, @ModelAttribute("employee") Employee employee, @RequestParam(value = "oldPassword", required = false) String oldPassword, @RequestParam(value = "newPassword", required = false) String newPassword, @RequestParam(value = "confirmPassword", required = false) String confirmPassword) {
+    public String update(@PathVariable("id") long id, 
+                         @ModelAttribute("employee") Employee employee, 
+                         @RequestParam(value = "oldPassword", required = false) String oldPassword, 
+                         @RequestParam(value = "newPassword", required = false) String newPassword, 
+                         @RequestParam(value = "confirmPassword", required = false) String confirmPassword) {
+        
         Employee existing = repository.findById(id).orElseThrow();
         boolean credentialsChanged = false;
 
@@ -183,16 +172,20 @@ public class EmployeeController {
         if (employee.getPhoneNumber() != null) existing.setPhoneNumber(employee.getPhoneNumber());
         if (employee.getDob() != null) existing.setDob(employee.getDob());
         
-        if (employee.getAssets() != null) {
+        if (employee.getAssets() != null && !employee.getAssets().isEmpty()) {
             bundleRepo.findByDescription(employee.getAssets()).ifPresent(existing::setAssetBundle);
         }
         
-        if (newPassword != null && !newPassword.trim().isEmpty()) {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        String currentUsername = auth.getName();
+        
+        // CRITICAL FIX: Identifies if the user is updating their own profile
+        boolean isSelfUpdate = existing.getUsername().equals(currentUsername) || existing.getEmail().equals(currentUsername);
 
-            if (!isAdmin) {
-                if (!encoder.matches(oldPassword, existing.getPassword())) return "redirect:/employees/dashboard?error=wrongpassword";
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            if (!isAdmin || isSelfUpdate) {
+                if (oldPassword != null && !encoder.matches(oldPassword, existing.getPassword())) return "redirect:/employees/dashboard?error=wrongpassword";
                 if (!newPassword.equals(confirmPassword)) return "redirect:/employees/dashboard?error=passwordmismatch";
             }
             existing.setPassword(encoder.encode(newPassword));
@@ -201,12 +194,16 @@ public class EmployeeController {
         
         repository.save(existing);
         
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        // If Admin is updating another employee in the directory -> go straight back to directory without logout
+        if (isAdmin && !isSelfUpdate) {
+            return "redirect:/employees/list";
+        }
         
-        if (credentialsChanged) return "redirect:/login?logout"; 
+        // Only log out if you changed your OWN credentials
+        if (credentialsChanged && isSelfUpdate) {
+            return "redirect:/login?logout"; 
+        }
         
-        if (isAdmin) return "redirect:/employees/dashboard?profileUpdated";
         return "redirect:/employees/dashboard?profileUpdated"; 
     }
 
@@ -229,9 +226,7 @@ public class EmployeeController {
     public String claimAsset(@RequestParam("assets") String assets) {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         Employee user = repository.findByEmailOrUsername(currentUsername).orElseThrow();
-        
         bundleRepo.findByDescription(assets).ifPresent(user::setAssetBundle);
-        
         user.setAssetAcknowledged(true); 
         repository.save(user);
         return "redirect:/employees/dashboard?claimSuccess";
@@ -262,7 +257,6 @@ public class EmployeeController {
         
         String adminBody = "<p>Employee <b>" + user.getFirstName() + " " + user.getLastName() + "</b> has raised a new IT Support Ticket.</p><br><p><b>Category:</b> " + issueCategory + "<br><b>Description:</b> " + description + "</p>";
         emailService.sendHtmlEmail("yashaswiniumesh157@gmail.com", "New Support Ticket Raised", "New IT Ticket", adminBody, "View Tickets", "https://stafflaunch-portal.onrender.com/admin/tickets");
-
         return "redirect:/employees/dashboard?issueReported";
     }
 
@@ -290,7 +284,6 @@ public class EmployeeController {
 
         String body = "<p>Hello " + issue.getEmployee().getFirstName() + ",</p><p>Your IT Support Ticket regarding <b>'" + issue.getIssueCategory() + "'</b> has been resolved by the Administrator.</p><br><p><b>Resolution Action:</b> " + resolutionType + "</p><p>If you need further assistance, please open a new ticket from your dashboard.</p>";
         emailService.sendHtmlEmail(issue.getEmployee().getEmail(), "IT Support Ticket Resolved", "Ticket Resolved", body, "View Dashboard", "https://stafflaunch-portal.onrender.com/employees/dashboard");
-
         return "redirect:/admin/tickets?resolved";
     }
 
@@ -308,7 +301,6 @@ public class EmployeeController {
         
         String body = "<p>Hello " + e.getFirstName() + ",</p><p>Great news! Your employee account has been officially <b>approved</b> by the IT Administrator.</p><p>You can now log into the StaffLaunch Enterprise Portal to view your dashboard, acknowledge your IT assets, and access the resource library.</p>";
         emailService.sendHtmlEmail(e.getEmail(), "Account Approved - Welcome to StaffLaunch!", "Account Approved", body, "Login Now", "https://stafflaunch-portal.onrender.com/login");
-
         return "redirect:/employees/approvals";
     }
 
@@ -322,8 +314,6 @@ public class EmployeeController {
     @GetMapping("/employees/delete/{id}")
     public String delete(@PathVariable("id") long id) {
         Employee emp = repository.findById(id).orElseThrow();
-        
-        // BACKEND SAFEGUARD: Never allow the admin account to be deleted
         if (!"admin".equals(emp.getUsername())) {
             repository.deleteById(id);
         }
