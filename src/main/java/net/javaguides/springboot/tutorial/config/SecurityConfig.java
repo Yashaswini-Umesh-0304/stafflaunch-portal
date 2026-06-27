@@ -17,14 +17,15 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                // CRITICAL FIX: Added "/error" so crashes don't loop to login
-                .requestMatchers("/", "/home", "/login", "/signup", "/add-user", "/api/send-otp", "/api/verify-otp", "/error").permitAll()
-                .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-                .requestMatchers("/employees/approvals", "/employees/add-manual", "/employees/approve/**", "/employees/delete/**", "/admin/tickets/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
-            )
+        http.csrf(csrf -> csrf
+        // Allow the signup form to exist without requiring a token for the initial GET request
+        .ignoringRequestMatchers("/signup", "/add-user") 
+    )
+    .authorizeHttpRequests(auth -> auth
+        .requestMatchers("/", "/home", "/login", "/signup", "/add-user", "/api/send-otp", "/api/verify-otp", "/error").permitAll()
+        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+        .anyRequest().authenticated()
+    )
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
