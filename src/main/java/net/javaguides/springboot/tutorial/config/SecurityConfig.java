@@ -19,8 +19,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // Explicitly unblocks the signup routes so users aren't sent to /login
-                .requestMatchers("/", "/home", "/login", "/signup", "/add-user", "/api/send-otp", "/api/verify-otp").permitAll()
+                // CRITICAL FIX: Added "/error" so crashes don't loop to login
+                .requestMatchers("/", "/home", "/login", "/signup", "/add-user", "/api/send-otp", "/api/verify-otp", "/error").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                 .requestMatchers("/employees/approvals", "/employees/add-manual", "/employees/approve/**", "/employees/delete/**", "/admin/tickets/**").hasRole("ADMIN")
                 .anyRequest().authenticated()

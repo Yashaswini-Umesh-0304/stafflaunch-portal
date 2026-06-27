@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Registration | StaffLaunch</title>
-    <!-- CRITICAL: Allows Javascript to communicate with Spring Security -->
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     
@@ -19,9 +18,9 @@
 <nav class="navbar navbar-light bg-transparent mt-3">
     <div class="container">
         <a class="text-decoration-none text-secondary fw-bold" 
-           th:href="${#authorization.expression('hasRole(''ADMIN'')')} ? @{/employees/list} : @{/home}">
+           th:href="${isAdmin} ? @{/employees/list} : @{/home}">
            <i class="fas fa-arrow-left me-2"></i>
-           <span th:text="${#authorization.expression('hasRole(''ADMIN'')')} ? 'Back to Employee Directory' : 'Back to Home'">Back</span>
+           <span th:text="${isAdmin} ? 'Back to Employee Directory' : 'Back to Home'">Back</span>
         </a>
     </div>
 </nav>
@@ -33,13 +32,12 @@
                 <div class="card-header bg-primary text-white text-center py-3">
                     <h5 class="mb-0 fw-bold">
                         <i class="fas fa-user-plus me-2"></i>
-                        <span th:text="${#authorization.expression('hasRole(''ADMIN'')')} ? 'Add New Employee' : 'Employee Registration'">Registration</span>
+                        <span th:text="${isAdmin} ? 'Add New Employee' : 'Employee Registration'">Registration</span>
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <form th:action="${#authorization.expression('hasRole(''ADMIN'')')} ? @{/employees/add-manual} : @{/add-user}" th:object="${employee}" method="post">
+                    <form th:action="${isAdmin} ? @{/employees/add-manual} : @{/add-user}" th:object="${employee}" method="post">
                         
-                        <!-- SHARED FIELDS -->
                         <div class="row mb-3">
                             <div class="col">
                                 <label class="form-label small fw-bold">First Name</label>
@@ -64,8 +62,7 @@
                             </div>
                         </div>
 
-                        <!-- ADMIN ONLY FIELD -->
-                        <div class="mb-3" sec:authorize="hasRole('ADMIN')">
+                        <div class="mb-3" th:if="${isAdmin}">
                             <label class="form-label small fw-bold text-primary">Assign IT Asset Bundle</label>
                             <select th:field="*{assets}" class="form-select border-primary">
                                 <option value="">-- No Assets Assigned --</option>
@@ -76,8 +73,7 @@
                             </select>
                         </div>
 
-                        <!-- USER REGISTRATION ONLY FIELDS -->
-                        <div sec:authorize="!hasRole('ADMIN')">
+                        <div th:if="${!isAdmin}">
                             <div class="row mb-3">
                                 <div class="col">
                                     <label class="form-label small fw-bold">Username</label>
@@ -95,7 +91,6 @@
                                 <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger small mt-1 mb-0 fw-bold"></p>
                             </div>
                             
-                            <!-- NEW DYNAMIC OTP SECTION -->
                             <div class="mb-3 d-none p-3 bg-light rounded border" id="otpSection">
                                 <label class="form-label small fw-bold text-primary"><i class="fas fa-envelope-open-text me-2"></i>Enter Verification Code</label>
                                 <div class="input-group">
@@ -106,21 +101,17 @@
                             </div>
                         </div>
 
-                        <!-- BUTTON CONTROLS -->
                         <div class="d-grid gap-2 mt-4">
-                            
-                            <!-- Get OTP Button (Only visible for standard signup) -->
-                            <button type="button" class="btn btn-dark py-2 fw-bold shadow-sm" id="getOtpBtn" sec:authorize="!hasRole('ADMIN')">
+                            <button type="button" class="btn btn-dark py-2 fw-bold shadow-sm" id="getOtpBtn" th:if="${!isAdmin}">
                                 Get OTP
                             </button>
                             
-                            <!-- Main Submit Button (Disabled until OTP verification for standard users) -->
                             <button type="submit" class="btn btn-primary py-2 fw-bold shadow-sm" id="signupSubmitBtn"
-                                    th:text="${#authorization.expression('hasRole(''ADMIN'')')} ? 'Save to Directory' : 'Request Access'">
+                                    th:text="${isAdmin} ? 'Save to Directory' : 'Request Access'">
                                 Submit
                             </button>
                             
-                            <div th:if="${!#authorization.expression('hasRole(''ADMIN'')')}" class="text-center mt-2">
+                            <div th:if="${!isAdmin}" class="text-center mt-2">
                                 <span class="small text-muted">Already registered? <a th:href="@{/login}" class="text-primary text-decoration-none fw-bold">Login</a></span>
                             </div>
                         </div>
@@ -137,7 +128,6 @@
         const phoneError = document.getElementById('signupPhoneError');
         const submitBtn = document.getElementById('signupSubmitBtn');
         
-        // OTP Elements
         const getOtpBtn = document.getElementById('getOtpBtn');
         const verifyOtpBtn = document.getElementById('verifyOtpBtn');
         const otpSection = document.getElementById('otpSection');
@@ -145,11 +135,17 @@
         const otpFeedback = document.getElementById('otpFeedback');
         const emailInput = document.getElementById('signupEmailInput');
 
-        // Security headers for Fetch API
-        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        let csrfToken = "";
+        let csrfHeader = "";
+        
+        const csrfMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        
+        if (csrfMeta && csrfHeaderMeta) {
+            csrfToken = csrfMeta.getAttribute('content');
+            csrfHeader = csrfHeaderMeta.getAttribute('content');
+        }
 
-        // 1. Phone Validation Logic
         function validateSignupForm() {
             let isPhoneValid = true;
             if (phoneInput) {
@@ -168,7 +164,6 @@
                 }
             }
             
-            // Re-evaluates if admin button should be disabled
             if (!getOtpBtn && submitBtn) {
                 submitBtn.disabled = !isPhoneValid;
             }
@@ -177,9 +172,8 @@
 
         if (phoneInput) phoneInput.addEventListener('input', validateSignupForm);
 
-        // 2. OTP Registration Flow (Only applies if 'Get OTP' button exists on page)
         if (getOtpBtn) {
-            submitBtn.style.display = 'none'; // Hide Request Access initially
+            submitBtn.style.display = 'none'; 
 
             getOtpBtn.addEventListener('click', function() {
                 if (!validateSignupForm()) return;
@@ -205,6 +199,10 @@
                         getOtpBtn.disabled = false;
                         otpSection.classList.remove('d-none');
                     }
+                })
+                .catch(err => {
+                    getOtpBtn.innerText = 'Error. Try Again.';
+                    getOtpBtn.disabled = false;
                 });
             });
 
@@ -226,7 +224,7 @@
                         verifyOtpBtn.disabled = true;
                         otpInput.disabled = true;
                         getOtpBtn.style.display = 'none';
-                        submitBtn.style.display = 'block'; // Unhide Request Access!
+                        submitBtn.style.display = 'block'; 
                     } else {
                         otpFeedback.innerText = 'Invalid OTP. Please check your email and try again.';
                         otpFeedback.className = 'small mt-2 fw-bold text-danger';

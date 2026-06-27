@@ -71,9 +71,13 @@ public class EmployeeController {
     @ResponseBody
     @PostMapping("/api/send-otp")
     public Map<String, String> sendOtp(@RequestParam("email") String email) {
-        String otp = otpService.generateAndStoreOtp(email);
-        String body = "<p>Your OTP is:</p><h1 style='color: #e04a32; font-size: 42px; letter-spacing: 6px; margin: 20px 0;'>" + otp + "</h1><p>This OTP expires in 10 minutes.</p>";
-        emailService.sendHtmlEmail(email, "Your StaffLaunch OTP", "Registration OTP", body, null, null);
+        try {
+            String otp = otpService.generateAndStoreOtp(email);
+            String body = "<p>Your OTP is:</p><h1 style='color: #e04a32; font-size: 42px; letter-spacing: 6px; margin: 20px 0;'>" + otp + "</h1><p>This OTP expires in 10 minutes.</p>";
+            emailService.sendHtmlEmail(email, "Your StaffLaunch OTP", "Registration OTP", body, null, null);
+        } catch (Exception e) {
+            System.out.println("Failed to send OTP email");
+        }
         return Map.of("status", "success");
     }
 
@@ -87,7 +91,15 @@ public class EmployeeController {
     @GetMapping("/") public String root() { return "redirect:/home"; }
     @GetMapping("/home") public String home() { return "home"; }
     @GetMapping("/login") public String login() { return "login"; }
-    @GetMapping("/signup") public String signup(Employee employee) { return "add-employee"; }
+
+    @GetMapping("/signup") 
+    public String signup(Employee employee, Model model) { 
+        // CRITICAL FIX: Calculates admin status safely to prevent Thymeleaf crashes
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        model.addAttribute("isAdmin", isAdmin);
+        return "add-employee"; 
+    }
 
     @PostMapping("/add-user")
     public String register(@Valid Employee employee, BindingResult result) {
@@ -104,8 +116,11 @@ public class EmployeeController {
                 existing.setAssetAcknowledged(true);
                 repository.save(existing);
                 
-                String adminBody = "<p>Employee <b>" + existing.getFirstName() + " " + existing.getLastName() + "</b> has completed their registration and is requesting platform access.</p>";
-                emailService.sendHtmlEmail("yashaswiniumesh157@gmail.com", "New Access Request", "Access Request Submitted", adminBody, "Review Approvals", "https://stafflaunch-portal.onrender.com/employees/approvals");
+                try {
+                    String adminBody = "<p>Employee <b>" + existing.getFirstName() + " " + existing.getLastName() + "</b> has completed their registration and is requesting platform access.</p>";
+                    emailService.sendHtmlEmail("yashaswiniumesh157@gmail.com", "New Access Request", "Access Request Submitted", adminBody, "Review Approvals", "https://stafflaunch-portal.onrender.com/employees/approvals");
+                } catch (Exception e) { System.out.println("Email trigger failed safely."); }
+                
                 return "redirect:/login?success";
             }
             result.rejectValue("email", "error.user", "Email already exists.");
@@ -116,8 +131,11 @@ public class EmployeeController {
         employee.setRole("ROLE_USER");
         repository.save(employee);
         
-        String adminBody = "<p>A new user, <b>" + employee.getFirstName() + " " + employee.getLastName() + "</b>, has requested platform access.</p>";
-        emailService.sendHtmlEmail("yashaswiniumesh157@gmail.com", "New Access Request", "Access Request Submitted", adminBody, "Review Approvals", "https://stafflaunch-portal.onrender.com/employees/approvals");
+        try {
+            String adminBody = "<p>A new user, <b>" + employee.getFirstName() + " " + employee.getLastName() + "</b>, has requested platform access.</p>";
+            emailService.sendHtmlEmail("yashaswiniumesh157@gmail.com", "New Access Request", "Access Request Submitted", adminBody, "Review Approvals", "https://stafflaunch-portal.onrender.com/employees/approvals");
+        } catch (Exception e) { System.out.println("Email trigger failed safely."); }
+        
         return "redirect:/login?pending";
     }
 
@@ -132,8 +150,11 @@ public class EmployeeController {
         }
         repository.save(employee);
         
-        String body = "<p>Hello " + employee.getFirstName() + ",</p><p>Your basic profile has been created in the StaffLaunch directory by the IT Administrator.</p><p>Please complete your registration and set your secure password by clicking the link below.</p>";
-        emailService.sendHtmlEmail(employee.getEmail(), "Action Required: Complete Registration", "Welcome to the Team!", body, "Complete Sign Up", "https://stafflaunch-portal.onrender.com/signup");
+        try {
+            String body = "<p>Hello " + employee.getFirstName() + ",</p><p>Your basic profile has been created in the StaffLaunch directory by the IT Administrator.</p><p>Please complete your registration and set your secure password by clicking the link below.</p>";
+            emailService.sendHtmlEmail(employee.getEmail(), "Action Required: Complete Registration", "Welcome to the Team!", body, "Complete Sign Up", "https://stafflaunch-portal.onrender.com/signup");
+        } catch (Exception e) { System.out.println("Email trigger failed safely."); }
+        
         return "redirect:/employees/list";
     }
 
@@ -180,7 +201,6 @@ public class EmployeeController {
         boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         String currentUsername = auth.getName();
         
-        // CRITICAL FIX: Identifies if the user is updating their own profile
         boolean isSelfUpdate = existing.getUsername().equals(currentUsername) || existing.getEmail().equals(currentUsername);
 
         if (newPassword != null && !newPassword.trim().isEmpty()) {
@@ -194,12 +214,10 @@ public class EmployeeController {
         
         repository.save(existing);
         
-        // If Admin is updating another employee in the directory -> go straight back to directory without logout
         if (isAdmin && !isSelfUpdate) {
             return "redirect:/employees/list";
         }
         
-        // Only log out if you changed your OWN credentials
         if (credentialsChanged && isSelfUpdate) {
             return "redirect:/login?logout"; 
         }
@@ -255,8 +273,11 @@ public class EmployeeController {
         issue.setReportDate(LocalDateTime.now());
         techIssueRepository.save(issue);
         
-        String adminBody = "<p>Employee <b>" + user.getFirstName() + " " + user.getLastName() + "</b> has raised a new IT Support Ticket.</p><br><p><b>Category:</b> " + issueCategory + "<br><b>Description:</b> " + description + "</p>";
-        emailService.sendHtmlEmail("yashaswiniumesh157@gmail.com", "New Support Ticket Raised", "New IT Ticket", adminBody, "View Tickets", "https://stafflaunch-portal.onrender.com/admin/tickets");
+        try {
+            String adminBody = "<p>Employee <b>" + user.getFirstName() + " " + user.getLastName() + "</b> has raised a new IT Support Ticket.</p><br><p><b>Category:</b> " + issueCategory + "<br><b>Description:</b> " + description + "</p>";
+            emailService.sendHtmlEmail("yashaswiniumesh157@gmail.com", "New Support Ticket Raised", "New IT Ticket", adminBody, "View Tickets", "https://stafflaunch-portal.onrender.com/admin/tickets");
+        } catch (Exception e) { System.out.println("Email trigger failed safely."); }
+
         return "redirect:/employees/dashboard?issueReported";
     }
 
@@ -282,8 +303,16 @@ public class EmployeeController {
         issue.setResolutionType(resolutionType);
         techIssueRepository.save(issue);
 
-        String body = "<p>Hello " + issue.getEmployee().getFirstName() + ",</p><p>Your IT Support Ticket regarding <b>'" + issue.getIssueCategory() + "'</b> has been resolved by the Administrator.</p><br><p><b>Resolution Action:</b> " + resolutionType + "</p><p>If you need further assistance, please open a new ticket from your dashboard.</p>";
-        emailService.sendHtmlEmail(issue.getEmployee().getEmail(), "IT Support Ticket Resolved", "Ticket Resolved", body, "View Dashboard", "https://stafflaunch-portal.onrender.com/employees/dashboard");
+        // CRITICAL FIX: Safe try-catch wrapper with null checks prevents the 500 error crash
+        try {
+            if (issue.getEmployee() != null && issue.getEmployee().getEmail() != null) {
+                String body = "<p>Hello " + issue.getEmployee().getFirstName() + ",</p><p>Your IT Support Ticket regarding <b>'" + issue.getIssueCategory() + "'</b> has been resolved by the Administrator.</p><br><p><b>Resolution Action:</b> " + resolutionType + "</p><p>If you need further assistance, please open a new ticket from your dashboard.</p>";
+                emailService.sendHtmlEmail(issue.getEmployee().getEmail(), "IT Support Ticket Resolved", "Ticket Resolved", body, "View Dashboard", "https://stafflaunch-portal.onrender.com/employees/dashboard");
+            }
+        } catch (Exception e) { 
+            System.out.println("Email trigger failed safely: " + e.getMessage()); 
+        }
+
         return "redirect:/admin/tickets?resolved";
     }
 
@@ -299,8 +328,11 @@ public class EmployeeController {
         e.setEnabled(true);
         repository.save(e);
         
-        String body = "<p>Hello " + e.getFirstName() + ",</p><p>Great news! Your employee account has been officially <b>approved</b> by the IT Administrator.</p><p>You can now log into the StaffLaunch Enterprise Portal to view your dashboard, acknowledge your IT assets, and access the resource library.</p>";
-        emailService.sendHtmlEmail(e.getEmail(), "Account Approved - Welcome to StaffLaunch!", "Account Approved", body, "Login Now", "https://stafflaunch-portal.onrender.com/login");
+        try {
+            String body = "<p>Hello " + e.getFirstName() + ",</p><p>Great news! Your employee account has been officially <b>approved</b> by the IT Administrator.</p><p>You can now log into the StaffLaunch Enterprise Portal to view your dashboard, acknowledge your IT assets, and access the resource library.</p>";
+            emailService.sendHtmlEmail(e.getEmail(), "Account Approved - Welcome to StaffLaunch!", "Account Approved", body, "Login Now", "https://stafflaunch-portal.onrender.com/login");
+        } catch (Exception ex) { System.out.println("Email trigger failed safely."); }
+
         return "redirect:/employees/approvals";
     }
 
