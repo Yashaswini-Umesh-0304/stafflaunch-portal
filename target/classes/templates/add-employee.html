@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration | StaffLaunch</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border-radius: 15px; border: none; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-light bg-transparent mt-3">
+    <div class="container">
+        <a class="text-decoration-none text-secondary fw-bold" 
+           th:href="${isAdmin} ? @{/employees/list} : @{/home}">
+           <i class="fas fa-arrow-left me-2"></i>
+           <span th:text="${isAdmin} ? 'Back to Employee Directory' : 'Back to Home'">Back</span>
+        </a>
+    </div>
+</nav>
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-user-plus me-2"></i>
+                        <span th:text="${isAdmin} ? 'Add New Employee' : 'Employee Registration'">Registration</span>
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="${isAdmin} ? @{/employees/add-manual} : @{/add-user}" th:object="${employee}" method="post">
+                        
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label small fw-bold">First Name</label>
+                                <input type="text" th:field="*{firstName}" class="form-control" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label small fw-bold">Last Name</label>
+                                <input type="text" th:field="*{lastName}" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label small fw-bold">Official Email</label>
+                                <input type="email" th:field="*{email}" class="form-control" id="signupEmailInput" required>
+                                <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger small mt-1 mb-0 fw-bold"></p>
+                            </div>
+                            <div class="col">
+                                <label class="form-label small fw-bold">Phone</label>
+                                <input type="text" th:field="*{phoneNumber}" class="form-control" id="signupPhoneInput">
+                                <div id="signupPhoneError" class="text-danger small mt-1 d-none fw-bold">Must be 10 digits starting with 6, 7, 8, or 9.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" th:if="${isAdmin}">
+                            <label class="form-label small fw-bold text-primary">Assign IT Asset Bundle</label>
+                            <select th:field="*{assets}" class="form-select border-primary">
+                                <option value="">-- No Assets Assigned --</option>
+                                <option value="Workstation: MacBook Pro M3 + 27-inch Dell Monitor">Power User (MacBook + 4K Monitor)</option>
+                                <option value="Workstation: Dell Latitude + Wireless Mouse">Standard (Dell Laptop + Peripheral)</option>
+                                <option value="Mobile: iPad Air + Apple Pencil">Design Bundle (iPad + Pencil)</option>
+                                <option value="Remote: Lenovo ThinkPad + Global VPN Router">Remote Bundle (Laptop + VPN)</option>
+                            </select>
+                        </div>
+
+                        <div th:if="${!isAdmin}">
+                            <div class="row mb-3">
+                                <div class="col">
+                                    <label class="form-label small fw-bold">Username</label>
+                                    <input type="text" th:field="*{username}" class="form-control" required>
+                                </div>
+                                <div class="col">
+                                    <label class="form-label small fw-bold">Date of Birth</label>
+                                    <input type="date" th:field="*{dob}" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold">Password</label>
+                                <input type="password" th:field="*{password}" class="form-control" required>
+                                <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger small mt-1 mb-0 fw-bold"></p>
+                            </div>
+                            
+                            <div class="mb-3 d-none p-3 bg-light rounded border" id="otpSection">
+                                <label class="form-label small fw-bold text-primary"><i class="fas fa-envelope-open-text me-2"></i>Enter Verification Code</label>
+                                <div class="input-group">
+                                    <input type="text" id="otpInput" class="form-control border-primary" placeholder="6-digit OTP">
+                                    <button type="button" class="btn btn-outline-primary fw-bold" id="verifyOtpBtn">Verify</button>
+                                </div>
+                                <div id="otpFeedback" class="small mt-2 fw-bold"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="button" class="btn btn-dark py-2 fw-bold shadow-sm" id="getOtpBtn" th:if="${!isAdmin}">
+                                Get OTP
+                            </button>
+                            
+                            <button type="submit" class="btn btn-primary py-2 fw-bold shadow-sm" id="signupSubmitBtn"
+                                    th:text="${isAdmin} ? 'Save to Directory' : 'Request Access'">
+                                Submit
+                            </button>
+                            
+                            <div th:if="${!isAdmin}" class="text-center mt-2">
+                                <span class="small text-muted">Already registered? <a th:href="@{/login}" class="text-primary text-decoration-none fw-bold">Login</a></span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const phoneInput = document.getElementById('signupPhoneInput');
+        const phoneError = document.getElementById('signupPhoneError');
+        const submitBtn = document.getElementById('signupSubmitBtn');
+        
+        const getOtpBtn = document.getElementById('getOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const otpSection = document.getElementById('otpSection');
+        const otpInput = document.getElementById('otpInput');
+        const otpFeedback = document.getElementById('otpFeedback');
+        const emailInput = document.getElementById('signupEmailInput');
+
+        let csrfToken = "";
+        let csrfHeader = "";
+        
+        const csrfMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        
+        if (csrfMeta && csrfHeaderMeta) {
+            csrfToken = csrfMeta.getAttribute('content');
+            csrfHeader = csrfHeaderMeta.getAttribute('content');
+        }
+
+        function validateSignupForm() {
+            let isPhoneValid = true;
+            if (phoneInput) {
+                phoneInput.value = phoneInput.value.replace(/\D/g, '');
+                const phoneVal = phoneInput.value;
+                if (phoneVal.length > 0) {
+                    const phoneRegex = /^[6-9]\d{9}$/;
+                    if (!phoneRegex.test(phoneVal)) {
+                        phoneError.classList.remove('d-none');
+                        isPhoneValid = false;
+                    } else {
+                        phoneError.classList.add('d-none');
+                    }
+                } else {
+                    phoneError.classList.add('d-none');
+                }
+            }
+            
+            if (!getOtpBtn && submitBtn) {
+                submitBtn.disabled = !isPhoneValid;
+            }
+            return isPhoneValid;
+        }
+
+        if (phoneInput) phoneInput.addEventListener('input', validateSignupForm);
+
+        if (getOtpBtn) {
+            submitBtn.style.display = 'none'; 
+
+            getOtpBtn.addEventListener('click', function() {
+                if (!validateSignupForm()) return;
+
+                const email = emailInput.value;
+                if (!email) {
+                    alert('Please enter your Official Email before requesting an OTP.');
+                    return;
+                }
+
+                getOtpBtn.innerText = 'Sending...';
+                getOtpBtn.disabled = true;
+
+                fetch('/api/send-otp?email=' + encodeURIComponent(email), {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        getOtpBtn.innerText = 'Resend OTP';
+                        getOtpBtn.classList.replace('btn-dark', 'btn-outline-dark');
+                        getOtpBtn.disabled = false;
+                        otpSection.classList.remove('d-none');
+                    }
+                })
+                .catch(err => {
+                    getOtpBtn.innerText = 'Error. Try Again.';
+                    getOtpBtn.disabled = false;
+                });
+            });
+
+            verifyOtpBtn.addEventListener('click', function() {
+                const email = emailInput.value;
+                const otp = otpInput.value;
+
+                if (!otp) return;
+
+                fetch('/api/verify-otp?email=' + encodeURIComponent(email) + '&otp=' + encodeURIComponent(otp), {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.valid) {
+                        otpFeedback.innerText = '✓ OTP Verified Successfully!';
+                        otpFeedback.className = 'small mt-2 fw-bold text-success';
+                        verifyOtpBtn.disabled = true;
+                        otpInput.disabled = true;
+                        getOtpBtn.style.display = 'none';
+                        submitBtn.style.display = 'block'; 
+                    } else {
+                        otpFeedback.innerText = 'Invalid OTP. Please check your email and try again.';
+                        otpFeedback.className = 'small mt-2 fw-bold text-danger';
+                    }
+                });
+            });
+        }
+    });
+</script>
+</body>
+</html>

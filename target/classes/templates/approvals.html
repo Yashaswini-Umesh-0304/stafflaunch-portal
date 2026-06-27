@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Pending Approvals</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/employees/dashboard}"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+    </div>
+</nav>
+<div class="container">
+    <h3><i class="fas fa-user-clock text-danger me-2"></i>Pending Access Requests</h3>
+    <div class="card shadow-sm mt-4">
+        <table class="table table-hover mb-0">
+            <thead class="table-danger">
+                <tr><th>Applicant</th><th>Email</th><th class="text-center">Action</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="user : ${pendingUsers}">
+                    <td th:text="${user.firstName + ' ' + user.lastName}" class="fw-bold"></td>
+                    <td th:text="${user.email}"></td>
+                    <td class="text-center">
+                        <a th:href="@{/employees/approve/{id}(id=${user.id})}" class="btn btn-sm btn-success">Approve Account</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div th:if="${#lists.isEmpty(pendingUsers)}" class="p-5 text-center text-muted">No pending requests.</div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,14 @@
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/repository/TechIssueRepository.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/entity/OtpToken.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/entity/Employee.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/Application.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/controller/EmailService.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/config/CustomUserDetailsService.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/repository/OtpTokenRepository.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/repository/HardwareBundleRepository.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/controller/OtpService.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/entity/TechIssue.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/entity/HardwareBundle.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/config/SecurityConfig.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/repository/EmployeeRepository.java
+/workspaces/springboot-thymeleaf-crud-tutorial/src/main/java/net/javaguides/springboot/tutorial/controller/EmployeeController.java

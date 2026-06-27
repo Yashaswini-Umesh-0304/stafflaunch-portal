@@ -67,7 +67,6 @@ public class EmployeeController {
         }
     }
 
-    // --- OTP API ENDPOINTS ---
     @ResponseBody
     @PostMapping("/api/send-otp")
     public Map<String, String> sendOtp(@RequestParam("email") String email) {
@@ -92,17 +91,21 @@ public class EmployeeController {
     @GetMapping("/home") public String home() { return "home"; }
     @GetMapping("/login") public String login() { return "login"; }
 
+    // CRITICAL FIX: Handles anonymous users safely so the page loads without 500 errors
     @GetMapping("/signup") 
-    public String signup(Employee employee, Model model) { 
-        // CRITICAL FIX: Calculates admin status safely to prevent Thymeleaf crashes
+    public String signup(Model model) { 
+        model.addAttribute("employee", new Employee());
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = false;
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        }
         model.addAttribute("isAdmin", isAdmin);
         return "add-employee"; 
     }
 
     @PostMapping("/add-user")
-    public String register(@Valid Employee employee, BindingResult result) {
+    public String register(@Valid @ModelAttribute("employee") Employee employee, BindingResult result) {
         if (result.hasErrors()) return "add-employee";
         
         Optional<Employee> existingUser = repository.findByEmail(employee.getEmail());
@@ -140,7 +143,7 @@ public class EmployeeController {
     }
 
     @PostMapping("/employees/add-manual")
-    public String adminAddManual(Employee employee) {
+    public String adminAddManual(@ModelAttribute("employee") Employee employee) {
         employee.setRole("ROLE_USER");
         employee.setEnabled(true);
         employee.setAssetAcknowledged(true);
@@ -303,7 +306,6 @@ public class EmployeeController {
         issue.setResolutionType(resolutionType);
         techIssueRepository.save(issue);
 
-        // CRITICAL FIX: Safe try-catch wrapper with null checks prevents the 500 error crash
         try {
             if (issue.getEmployee() != null && issue.getEmployee().getEmail() != null) {
                 String body = "<p>Hello " + issue.getEmployee().getFirstName() + ",</p><p>Your IT Support Ticket regarding <b>'" + issue.getIssueCategory() + "'</b> has been resolved by the Administrator.</p><br><p><b>Resolution Action:</b> " + resolutionType + "</p><p>If you need further assistance, please open a new ticket from your dashboard.</p>";
@@ -352,7 +354,6 @@ public class EmployeeController {
         return "redirect:/employees/list";
     }
 
-    // --- KNOWLEDGE BASE LOGIC ---
     public static class Article {
         public String title; public String imageUrl; public String htmlContent;
         public Article(String title, String imageUrl, String htmlContent) { this.title = title; this.imageUrl = imageUrl; this.htmlContent = htmlContent; }
@@ -361,11 +362,11 @@ public class EmployeeController {
     private static final List<String> ARTICLE_ORDER = Arrays.asList("welcome-manual", "engineering-excellence", "diversity-equity-inclusion", "agile-fundamentals", "data-privacy");
 
     private final Map<String, Article> knowledgeBase = new HashMap<>() {{
-        put("welcome-manual", new Article("The Welcome Manual", "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80", "<h4>Welcome to the Team!</h4><p>We are thrilled to have you onboard. At our core, we believe that the best products are built by teams that trust each other and communicate openly.</p><h5>Your First Week</h5><p>During your first week, focus on getting your development environment set up, meeting your immediate team members, and familiarizing yourself with our codebase architecture.</p><ul><li><b>Day 1:</b> IT Setup and HR Onboarding.</li><li><b>Day 2:</b> Department-specific tools and access.</li><li><b>Day 3-5:</b> Shadowing a senior team member on your first minor task.</li></ul><p>Remember, it is completely normal to feel overwhelmed at first. Ask questions, take notes, and take it one step at a time!</p>"));
-        put("engineering-excellence", new Article("Engineering Excellence", "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80", "<h4>Our Code Philosophy</h4><p>We operate on a simple principle: <i>We build it, we run it.</i> Quality is not an afterthought handled by a separate QA team; it is baked into every pull request.</p><h5>Core Practices</h5><ul><li><b>Test-Driven Development (TDD):</b> Write your unit tests before your logic.</li><li><b>Continuous Integration:</b> Merges to the main branch should happen daily to avoid integration hell.</li><li><b>Code Reviews:</b> Be kind but rigorous. Reviewing code is a primary responsibility, not a distraction.</li></ul><p>By adhering to these standards, we ensure our platform remains scalable, secure, and easy to maintain for future generations of engineers.</p>"));
-        put("diversity-equity-inclusion", new Article("Diversity, Equity & Inclusion (DEI)", "https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?auto=format&fit=crop&w=1200&q=80", "<h4>Building a Workspace for Everyone</h4><p>We are committed to fostering an environment where everyone, regardless of their background, feels valued and heard. Diversity drives innovation.</p><h5>Our Commitments</h5><p>We enforce a strict zero-tolerance policy against discrimination and harassment. Furthermore, we actively sponsor <b>Employee Resource Groups (ERGs)</b> to provide safe spaces and advocacy for underrepresented groups in tech.</p><blockquote>\"Inclusion is not a metric to hit, but a culture to cultivate.\"</blockquote><p>If you ever experience or witness behavior that violates our code of conduct, please utilize the anonymous reporting tool available in your HR portal.</p>"));
-        put("agile-fundamentals", new Article("Agile Fundamentals", "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=1200&q=80", "<h4>How We Work</h4><p>We utilize a modified Agile Scrum methodology to ensure rapid delivery without burning out our engineering teams.</p><h5>The Sprint Cycle</h5><ul><li><b>Sprint Planning:</b> Occurs every other Monday. We pull tickets from the backlog based on our current velocity.</li><li><b>Daily Standup:</b> A strict 15-minute sync at 10:00 AM. What did you do? What will you do? Are there blockers?</li><li><b>Retrospective:</b> Held at the end of the sprint. We discuss what went well and what we can improve.</li></ul><p>Your primary tool for tracking work will be Jira. Ensure your tickets are updated daily to maintain transparency across the organization.</p>"));
-        put("data-privacy", new Article("Data Privacy & Security Protocols", "https://images.unsplash.com/photo-1611224923853-80b023f02d71?auto=format&fit=crop&w=1200&q=80", "<h4>Protecting Our Users</h4><p>Security is everyone's responsibility. As an employee, you will likely have access to Personally Identifiable Information (PII). This access is a privilege that must be fiercely protected.</p><h5>Mandatory Protocols</h5><ol><li><b>VPN Usage:</b> All internal systems and dashboards must only be accessed while connected to the corporate VPN.</li><li><b>Phishing Awareness:</b> IT will occasionally send simulated phishing emails. Always verify the sender's address before clicking any links.</li><li><b>Device Security:</b> Never leave your workstation unlocked in a public space, and do not store corporate code on personal devices.</li></ol><p>Any suspected data breach or lost hardware must be reported to the IT Support Desk immediately via the Employee Portal.</p>"));
+        put("welcome-manual", new Article("The Welcome Manual", "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80", "<h4>Welcome to the Team!</h4><p>We are thrilled to have you onboard.</p>"));
+        put("engineering-excellence", new Article("Engineering Excellence", "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80", "<h4>Our Code Philosophy</h4><p>We operate on a simple principle: <i>We build it, we run it.</i></p>"));
+        put("diversity-equity-inclusion", new Article("Diversity, Equity & Inclusion (DEI)", "https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?auto=format&fit=crop&w=1200&q=80", "<h4>Building a Workspace for Everyone</h4><p>We are committed to fostering an environment where everyone feels valued and heard.</p>"));
+        put("agile-fundamentals", new Article("Agile Fundamentals", "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=1200&q=80", "<h4>How We Work</h4><p>We utilize a modified Agile Scrum methodology to ensure rapid delivery.</p>"));
+        put("data-privacy", new Article("Data Privacy & Security Protocols", "https://images.unsplash.com/photo-1611224923853-80b023f02d71?auto=format&fit=crop&w=1200&q=80", "<h4>Protecting Our Users</h4><p>Security is everyone's responsibility.</p>"));
     }};
 
     @GetMapping("/employees/resources/{slug}")
